@@ -18,6 +18,7 @@
 package net.floodlightcontroller.core.web;
 
 import net.floodlightcontroller.core.module.ModuleLoaderResource;
+import net.floodlightcontroller.proact.Proact.ProactResource;
 import net.floodlightcontroller.restserver.RestletRoutable;
 
 import org.restlet.Context;
@@ -62,6 +63,8 @@ public class CoreWebRoutable implements RestletRoutable {
         router.attach("/controller/summary/json", ControllerSummaryResource.class);
         router.attach("/role/json", RoleResource.class);
         router.attach("/health/json", HealthCheckResource.class);
+        router.attach("/proact", ProactResource.class);
+        
         return router;
     }
 }

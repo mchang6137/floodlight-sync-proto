@@ -61,6 +61,7 @@ public class OFFlowMod extends OFMessage implements OFActionFactoryAware, Clonea
         super();
         this.type = OFType.FLOW_MOD;
         this.length = U16.t(MINIMUM_LENGTH);
+        this.outPort = OFPort.OFPP_NONE.value;
     }
 
     /**
@@ -240,10 +241,19 @@ public class OFFlowMod extends OFMessage implements OFActionFactoryAware, Clonea
      */
     public OFFlowMod setActions(List<OFAction> actions) {
         this.actions = actions;
+        this.length = calcLength();
         return this;
     }
 
-    @Override
+    private short calcLength() {
+    	int l = MINIMUM_LENGTH;
+    	for(OFAction a: actions) {
+    		l += a.getLengthU();
+    	}
+    	return (short) l;
+	}
+
+	@Override
     public void readFrom(ChannelBuffer data) {
         super.readFrom(data);
         if (this.match == null)

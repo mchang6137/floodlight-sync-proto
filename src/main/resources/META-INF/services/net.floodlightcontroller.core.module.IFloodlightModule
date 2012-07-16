@@ -1,5 +1,6 @@
 net.floodlightcontroller.core.FloodlightProvider
 net.floodlightcontroller.storage.memory.MemoryStorageSource
+net.floodlightcontroller.storage.distmem.DistMemStorageSource
 net.floodlightcontroller.devicemanager.internal.DeviceManagerImpl
 net.floodlightcontroller.linkdiscovery.internal.LinkDiscoveryManager
 net.floodlightcontroller.topology.TopologyManager
@@ -11,6 +12,7 @@ net.floodlightcontroller.perfmon.NullPktInProcessingTime
 net.floodlightcontroller.restserver.RestApiServer
 net.floodlightcontroller.learningswitch.LearningSwitch
 net.floodlightcontroller.hub.Hub
+net.floodlightcontroller.proact.Proact
 net.floodlightcontroller.jython.JythonDebugInterface
 net.floodlightcontroller.counter.CounterStore
 net.floodlightcontroller.counter.NullCounterStore
