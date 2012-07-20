@@ -170,6 +170,7 @@ public class Proact implements IFloodlightModule, IOFMessageListener, IOFSwitchL
     OFMatch match(int inport){
     	OFMatch m = new OFMatch();
     	m.setInputPort((short) inport);
+    	m.setWildcards(OFMatch.OFPFW_ALL & ~OFMatch.OFPFW_IN_PORT);
     	return m;
     }
     
