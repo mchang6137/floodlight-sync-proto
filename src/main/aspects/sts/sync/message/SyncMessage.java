@@ -43,4 +43,8 @@ public class SyncMessage {
 	public long getXid() {
 		return xid;
 	}
+	
+	public String getMessageClass() {
+		return getClass().getSimpleName();
+	}
 }
