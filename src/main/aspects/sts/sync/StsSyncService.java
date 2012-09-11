@@ -27,10 +27,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import sts.SyncMessageEncoder;
+import sts.sync.message.StateChange;
 import sts.sync.message.SyncMessage;
 
-public class STSSync {
-    protected static Logger log = LoggerFactory.getLogger(STSSync.class);
+public class StsSyncService {
+    protected static Logger log = LoggerFactory.getLogger(StsSyncService.class);
 	
 	volatile Channel channel = null;
 	Set<SyncMessage> pendingMessages = Collections.synchronizedSet(new LinkedHashSet<SyncMessage>());
@@ -42,7 +43,7 @@ public class STSSync {
 	
 	private int port;
 	
-	public STSSync(String spec) {		
+	public StsSyncService(String spec) {		
 		String[] split = spec.split(":");
 		if("tcp".equalsIgnoreCase(split[0])) {
 			host = split[1];
@@ -60,6 +61,7 @@ public class STSSync {
 		} else {
 			throw new IllegalArgumentException("Unknown schema: "+split[0]);
 		}
+		log.info("created sync service: "+spec + ", mode="+mode);
 	}
 	
 	class SyncPipelineFactory implements ChannelPipelineFactory {
@@ -122,6 +124,11 @@ public class STSSync {
 		}
 	}
 	
+	public void enqueue(SyncMessage m) {
+		pendingMessages.add(m);
+		send();
+	}
+	
 	public void connect() {
 		if (mode == Mode.SERVER) {
 			// Configure the server.
@@ -163,7 +170,7 @@ public class STSSync {
 		// TODO Auto-generated method stub		
 	}
 
-	public void afterStatusChange(String string, String string2) {
-		// TODO Auto-generated method stub		
+	public void afterStatusChange(String name, String value) {
+		enqueue(new StateChange(name, value));
 	}
-	}
+}

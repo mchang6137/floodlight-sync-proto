@@ -18,3 +18,4 @@ net.floodlightcontroller.counter.CounterStore
 net.floodlightcontroller.counter.NullCounterStore
 net.floodlightcontroller.threadpool.ThreadPool
 net.floodlightcontroller.ui.web.StaticWebRoutable
+sts.sync.StsSyncModule

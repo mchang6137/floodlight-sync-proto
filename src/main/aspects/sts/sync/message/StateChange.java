@@ -19,6 +19,10 @@ public class StateChange extends SyncMessage {
 		}
 	}
 
+	public StateChange(String name, String value) {
+		this(name, value, null);
+	}
+	
 	private String generateFingerPrint() {
 		return name + "=" + value;
 	}

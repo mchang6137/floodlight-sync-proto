@@ -1,17 +1,17 @@
 package sts;
 
-import sts.sync.STSSync;
+import sts.sync.StsSyncService;
 import net.floodlightcontroller.core.IFloodlightProviderService.Role;
 import net.floodlightcontroller.core.IFloodlightProviderService;
 // import net.floodlightcontroller.core.internal.Controller;
 
 public aspect STSStateChangeAspect {
-	private STSSync sync;
+	private StsSyncService sync;
 	
 	public STSStateChangeAspect() {
 	}
 
-	public void setSync(STSSync sync) {
+	public void setSync(StsSyncService sync) {
 		this.sync = sync;
 	}
 	
