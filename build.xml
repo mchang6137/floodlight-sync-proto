@@ -24,10 +24,12 @@
 
     <property name="target" location="target"/>
     <property name="build" location="${target}/bin"/>
+    <property name="aop.build" location="${target}/bin-aop"/>
     <property name="build-test" location="${target}/bin-test"/>
     <property name="test-output" location="${target}/test"/>
     <property name="source" location="src/main/java"/>
 	<property name="resources" location="src/main/resources/"/>
+    <property name="aop.source" location="src/main/aspects"/>
     <property name="source-test" location="src/test/java"/>
     <property name="python-src" location="src/main/python"/>
     <property name="docs" location="${target}/docs"/>
@@ -37,6 +39,8 @@
     <property name="packetstreamer-thrift-jar" value="packetstreamer-thrift.jar"/>
     <property name="floodlight-jar" location="${target}/floodlight.jar"/>
     <property name="floodlight-test-jar" location="${target}/floodlight-test.jar"/>
+
+    <property name="aspectj.home" location="/usr/local/aspectj" />
 
     <patternset id="lib">
         <include name="logback-classic-1.0.0.jar"/>
@@ -84,6 +88,7 @@
     </path>
 
     <target name="init">
+        <mkdir dir="${aop.build}"/>
         <mkdir dir="${build}"/>
         <mkdir dir="${build-test}"/>
         <mkdir dir="${target}/lib"/>
@@ -99,6 +104,26 @@
 	       destdir="${build}">
 	</javac>
     </target>
+
+    <target name="aspects" depends="compile">
+        <taskdef resource="org/aspectj/tools/ant/taskdefs/aspectjTaskdefs.properties">
+            <classpath>
+                <pathelement location="${aspectj.home}/lib/aspectjtools.jar"/>
+            </classpath>
+        </taskdef>
+        <iajc destDir="${aop.build}" Xlintwarnings ="true" showWeaveInfo="true" 
+            sourceRoots="${aop.source}"
+            source="1.7">
+            <inpath>
+                <pathelement location="${build}"/>
+            </inpath>
+            <classpath>
+                <pathelement location="${aspectj.home}/lib/aspectjrt.jar"/>
+                <path refid="classpath"/>
+            </classpath>
+        </iajc>
+    </target>
+
 
     <target name="compile-tests" depends="compile-test"/>
     <target name="compile-test" depends="compile">
@@ -161,7 +186,7 @@
                 <attribute name="Main-Class" value="${main-class}"/>
                 <attribute name="Class-Path" value="."/>
             </manifest>
-            <fileset dir="${build}"/>
+            <fileset dir="${aop.build}"/>
         	<fileset dir="${resources}"/>
             <fileset dir="${python-src}">
                 <include name="**/*.py"/>
@@ -172,6 +197,7 @@
             <zipgroupfileset dir="${target}/lib">
                 <patternset refid="genlib"/>
             </zipgroupfileset>
+            <zipfileset src="${aspectj.home}/lib/aspectjrt.jar"/>
         </jar>
         <jar destfile="${floodlight-test-jar}" filesetmanifest="mergewithoutmain">
             <manifest>
