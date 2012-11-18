@@ -47,7 +47,7 @@ public class OpenflowPipelineFactory implements ChannelPipelineFactory {
         this.pipelineExecutor = pipelineExecutor;
         this.timer = new HashedWheelTimer();
         this.idleHandler = new IdleStateHandler(timer, 20, 25, 0);
-        this.readTimeoutHandler = new ReadTimeoutHandler(timer, 30);
+        this.readTimeoutHandler = new ReadTimeoutHandler(timer, 300);
     }
  
     @Override
@@ -60,7 +60,7 @@ public class OpenflowPipelineFactory implements ChannelPipelineFactory {
         pipeline.addLast("idle", idleHandler);
         pipeline.addLast("timeout", readTimeoutHandler);
         pipeline.addLast("handshaketimeout",
-                         new HandshakeTimeoutHandler(state, timer, 15));
+                         new HandshakeTimeoutHandler(state, timer, 600));
         if (pipelineExecutor != null)
             pipeline.addLast("pipelineExecutor",
                              new ExecutionHandler(pipelineExecutor));
