@@ -72,8 +72,17 @@ public class FloodlightModuleLoader {
 	        
 	        // Get all the current modules in the classpath
 	        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+	        
+	        try {
+	            cl.loadClass("sts.sync.StsSyncModule");
+				logger.info("Loaded stsModule successfully");
+			} catch (ClassNotFoundException e) {
+				throw new FloodlightModuleException("Could not load sync manually");
+			}
+	        
 	        ServiceLoader<IFloodlightModule> moduleLoader
 	            = ServiceLoader.load(IFloodlightModule.class, cl);
+	        
 	        // Iterate for each module, iterate through and add it's services
 	        for (IFloodlightModule m : moduleLoader) {
 	            if (logger.isDebugEnabled()) {

@@ -18,14 +18,20 @@ import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.Channels;
+import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
+import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
+import org.jboss.netty.handler.codec.frame.Delimiters;
 import org.jboss.netty.handler.codec.serialization.ObjectDecoder;
+import org.jboss.netty.handler.codec.string.StringDecoder;
+import org.jboss.netty.util.CharsetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import sts.SyncMessageDecoder;
 import sts.SyncMessageEncoder;
 import sts.sync.message.StateChange;
 import sts.sync.message.SyncMessage;
@@ -69,8 +75,10 @@ public class StsSyncService {
 		@Override
 		public ChannelPipeline getPipeline() throws Exception {
 			ChannelPipeline pipeline = Channels.pipeline();
-			pipeline.addLast("object-decode", new ObjectDecoder());
-			pipeline.addLast("sync-receive", new SyncReceiveHandler());
+			pipeline.addLast("frameDecoder", new DelimiterBasedFrameDecoder(1024, Delimiters.lineDelimiter()));
+			pipeline.addLast("stringDecoder", new StringDecoder(CharsetUtil.UTF_8));			 
+			pipeline.addLast("sync-decode", new SyncMessageDecoder());
+			pipeline.addLast("sync-receive", new SyncReceiveHandler());			
 			pipeline.addLast("object-encode", new SyncMessageEncoder());
 			return pipeline;
 		}
@@ -80,7 +88,10 @@ public class StsSyncService {
 		@Override
 		public void messageReceived(ChannelHandlerContext ctx, MessageEvent e)
 				throws Exception {
-			log.warn("Received some message event -- no msg to receive defined yet: "+e.getMessage());
+			SyncMessage message = (SyncMessage) e.getMessage();
+			SyncMessage reply = message.execute();
+			if(reply != null)
+				enqueue(reply);
 		}
 		
 		@Override
@@ -97,6 +108,13 @@ public class StsSyncService {
 			log.info("Channel connected  to {}", channel.getRemoteAddress());
 			send();
 		}
+
+		@Override
+		public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
+				throws Exception {
+			log.error("Exception caught in netty pipeline: "+e.getCause().getMessage(), e.getCause());
+		}
+		
 	}
 	
 	private void send() {
@@ -139,7 +157,6 @@ public class StsSyncService {
 
 			// Configure the pipeline factory.
 			bootstrap.setPipelineFactory(new SyncPipelineFactory());
-
 			// Bind and start to accept incoming connections.
 			bootstrap.bind(new InetSocketAddress(host, port));
 			log.info("Sync server listening on {} port {}", host, port);

@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -48,6 +49,7 @@ import org.openflow.protocol.OFMessage;
 import org.openflow.protocol.OFPacketIn;
 import org.openflow.protocol.OFPacketOut;
 import org.openflow.protocol.OFPort;
+import org.openflow.protocol.OFPortStatus;
 import org.openflow.protocol.OFType;
 import org.openflow.protocol.action.OFAction;
 import org.openflow.protocol.action.OFActionOutput;
@@ -68,6 +70,11 @@ public class Proact implements IFloodlightModule, IOFMessageListener, IOFSwitchL
 
 	private IStorageSourceService storage;
 
+	public static Proact lastInstance;
+	
+	public Proact() {
+	}	
+	
     /**
      * @param floodlightProvider the floodlightProvider to set
      */
@@ -81,13 +88,21 @@ public class Proact implements IFloodlightModule, IOFMessageListener, IOFSwitchL
     }
 
     public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
-        OFPacketIn pi = (OFPacketIn) msg;
-        log.info("Ignoring packetin {} sw: {}, in: {}", new Object[] { msg, sw, pi.getInPort()});
-
+    	if(msg instanceof OFPortStatus) {
+    		handlePortStatus((OFPortStatus) msg);
+    	} else if(msg instanceof OFPacketIn) {
+    		OFPacketIn pi = (OFPacketIn) msg;
+    		log.info("Ignoring packetin {} sw: {}, in: {}", new Object[] { msg, sw, pi.getInPort()});
+    	}
+    	
         return Command.CONTINUE;
     }
 
-    @Override
+    private void handlePortStatus(OFPortStatus msg) {
+		// TODO Auto-generated method stub		
+	}
+
+	@Override
     public boolean isCallbackOrderingPrereq(OFType type, String name) {
         return false;
     }
@@ -193,6 +208,119 @@ public class Proact implements IFloodlightModule, IOFMessageListener, IOFSwitchL
     @Override
     public void startUp(FloodlightModuleContext context) {
         floodlightProvider.addOFMessageListener(OFType.PACKET_IN, this);
+		lastInstance = this;
+    }
+    
+    class NOMSnapshot {
+    	private List<NOMSnapshotSwitch> switches;
+    	private List<Object> hosts;
+    	private List<Object> links;
+    	
+    	public NOMSnapshot() {
+    		switches = new ArrayList<NOMSnapshotSwitch>();
+    		hosts = new ArrayList<Object>();
+    		links = new ArrayList<Object>();    		
+		}
+
+		public NOMSnapshotSwitch switchForDpid(long dpid) {
+			for(NOMSnapshotSwitch s : switches) {
+				if(s.getDpid() == dpid)
+					return s;
+			}
+			NOMSnapshotSwitch s = new NOMSnapshotSwitch(dpid);
+			switches.add(s);
+			return s;
+		}
+
+		public List<NOMSnapshotSwitch> getSwitches() {
+			return switches;
+		}
+
+		public List<Object> getHosts() {
+			return hosts;
+		}
+
+		public List<Object> getLinks() {
+			return links;
+		}
+				
+    }
+    
+    class NOMSnapshotSwitch {
+		private long dpid;
+		private NOMSnapshotFlowtable flowTable;
+
+		public NOMSnapshotSwitch(long dpid) {
+			this.dpid = dpid;
+			this.flowTable = new NOMSnapshotFlowtable();
+		}
+
+		public long getDpid() {
+			return dpid;
+		}
+
+		public NOMSnapshotFlowtable getFlowTable() {
+			return flowTable;
+		}	
+    }
+    
+    class NOMSnapshotFlowtable {
+    	private List<TableEntry> entries;
+    	
+    	public NOMSnapshotFlowtable() {
+    		entries = new ArrayList<TableEntry>();
+    	}
+    	
+		public void addEntry(OFMatch ofMatch, OFAction ofAction) {
+			entries.add(new TableEntry(ofMatch, ofAction));			
+		}
+
+		public List<TableEntry> getEntries() {
+			return entries;
+		}
+		
+    }
+    
+    class TableEntry {
+    	private Map<String, Object> match;
+		private List<OFAction> actions;
+    	
+    	public TableEntry(OFMatch ofMatch, OFAction ofAction) {
+        	match = new HashMap<String, Object>();
+        	
+    		match.put("in_port", ofMatch.getInputPort());
+    		match.put("wildcards", ofMatch.getWildcards());
+    		
+    		actions = new ArrayList<OFAction>();
+    		actions.add(ofAction);
+    	}
+
+		public Map<String, Object> getMatch() {
+			return match;
+		}
+
+		public List<OFAction> getActions() {
+			return actions;
+		}
+    }
+    
+
+	public NOMSnapshot getNomSnapShot() {    	
+    	IResultSet result = storage.executeQuery("rules", new String[] {"dpid", "match", "action" }, null, new RowOrdering());
+
+    	NOMSnapshot res = new NOMSnapshot();
+    	
+    	Map<Long, NOMSnapshotSwitch> switchMap = new LinkedHashMap<Long, NOMSnapshotSwitch>();
+    	
+    	while(result.next()) {
+    		long dpid = result.getLong("dpid");
+    		
+    		NOMSnapshotSwitch sw = res.switchForDpid(dpid);
+    		Map<String, Object> row = result.getRow();
+    		sw.getFlowTable().addEntry(((OFMatch) row.get("match")), ((OFAction) row.get("action")));
+    	}
+    	
+    	return res;  	    	
     }
 
     /**

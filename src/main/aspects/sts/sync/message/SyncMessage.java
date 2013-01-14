@@ -14,18 +14,23 @@ public class SyncMessage {
 	private final long xid;
 	
 	public SyncMessage(Type type, long xid) {
+		this(type, xid, MicrosecondTimeSource.DEFAULT.getMicroSecondTime());
+		
 		if(type.equals(Type.RESPONSE) && xid <= 0 ) {
 			throw new IllegalArgumentException("XID must be specified for response messages");
 		} else if(!type.equals(Type.RESPONSE) && xid > 0 ) {
 			throw new IllegalArgumentException("XID must not be specified for other messages");
 		}
 		
+	}
+
+	SyncMessage(Type type, long xid, MicroSecondTime time) {		
 		this.type = type;
 		if(xid>0)
 			this.xid = xid;
 		else
 			this.xid = xidGenerator.getAndIncrement();
-		time = MicrosecondTimeSource.DEFAULT.getMicroSecondTime();
+		this.time = time;
 	}
 	
 	public SyncMessage(Type type) {
@@ -46,5 +51,9 @@ public class SyncMessage {
 	
 	public String getMessageClass() {
 		return getClass().getSimpleName();
+	}
+	
+	public SyncMessage execute() {
+		return null;
 	}
 }
