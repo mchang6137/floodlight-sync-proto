@@ -40,15 +40,14 @@
     <property name="floodlight-jar" location="${target}/floodlight.jar"/>
     <property name="floodlight-test-jar" location="${target}/floodlight-test.jar"/>
 
-    <property name="aspectj.home" location="/usr/local/aspectj" />
+    <property name="aspectj.home" location="/usr/share/aspectj" />
 
-    <patternset id="lib">
-        <include name="logback-classic-1.0.0.jar"/>
-        <include name="logback-core-1.0.0.jar"/>
+	<patternset id="inlib">
+    </patternset>
+	<patternset id="lib">
         <include name="jackson-core-asl-1.8.6.jar"/>
         <include name="jackson-mapper-asl-1.8.6.jar"/>
         <include name="org.easymock_2.5.2.jar"/>
-        <include name="slf4j-api-1.6.4.jar"/>
         <include name="org.restlet-2.1-RC1.jar"/>
         <include name="org.restlet.ext.jackson-2.1-RC1.jar"/>
         <include name="org.restlet.ext.simple-2.1-RC1.jar"/>
@@ -61,10 +60,31 @@
         <include name="libthrift-0.7.0.jar"/>
     </patternset>
     <patternset id="genlib">
-        <include name="${packetstreamer-thrift-jar}"/>
+        <include name="slf4j-api-1.6.4.jar" />
     </patternset>
 
+    <path id="inlibpath">
+        <fileset dir="lib">
+            <patternset refid="inlib"/>
+        </fileset>
+    </path>
+    <path id="genclasspath">
+        <fileset dir="lib">
+            <patternset refid="genlib"/>
+            <patternset refid="lib"/>
+        </fileset>
+    </path>
     <path id="classpath">
+        <fileset dir="lib">
+            <patternset refid="inlib"/>
+            <patternset refid="lib"/>
+        </fileset>
+        <fileset dir="${target}/lib">
+            <patternset refid="genlib"/>
+        </fileset>
+    </path>
+
+    <path id="aspectclasspath">
         <fileset dir="lib">
             <patternset refid="lib"/>
         </fileset>
@@ -98,7 +118,7 @@
 
     <target name="compile" depends="init,packetstreamer-thrift">
         <javac includeAntRuntime="false" 
-	       classpathref="classpath" 
+	       classpathref="genclasspath" 
 	       debug="true" 
 	       srcdir="${source}:${packetstreamer-gen}"
 	       destdir="${build}">
@@ -113,13 +133,13 @@
         </taskdef>
         <iajc destDir="${aop.build}" Xlintwarnings ="true" showWeaveInfo="true" 
             sourceRoots="${aop.source}"
-            source="1.7">
+            source="1.6" noimporterror="true">
             <inpath>
                 <pathelement location="${build}"/>
             </inpath>
             <classpath>
                 <pathelement location="${aspectj.home}/lib/aspectjrt.jar"/>
-                <path refid="classpath"/>
+                <path refid="aspectclasspath"/>
             </classpath>
         </iajc>
     </target>
@@ -140,7 +160,7 @@
 	       includeantruntime="false" 
 	       destdir="${packetstreamer-gen-build}"
 	       debug="true" debuglevel="lines,vars,source"
-	       classpathref="classpath" />
+	       classpathref="genclasspath" />
     </target>
     <target name="packetstreamer-thrift" depends="compile-thrift">
         <jar jarfile="${target}/lib/${packetstreamer-thrift-jar}"

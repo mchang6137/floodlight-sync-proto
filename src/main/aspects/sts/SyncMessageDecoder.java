@@ -4,16 +4,11 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.handler.codec.oneone.OneToOneDecoder;
-import org.jboss.netty.handler.codec.oneone.OneToOneEncoder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import sts.sync.StsSyncModule;
-import sts.sync.message.SyncMessage;
 import sts.sync.message.SyncMessageBuilder;
 
 public class SyncMessageDecoder extends OneToOneDecoder {
-    protected static Logger log = LoggerFactory.getLogger(SyncMessageDecoder.class);
+    protected static SimpleLogger log = SimpleLogger.getLogger(SyncMessageDecoder.class);
 
     private ObjectMapper objectMapper;
 

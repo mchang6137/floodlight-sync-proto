@@ -2,10 +2,10 @@ package sts.sync;
 
 import java.net.InetSocketAddress;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 
 import org.jboss.netty.bootstrap.ClientBootstrap;
@@ -25,23 +25,21 @@ import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
 import org.jboss.netty.handler.codec.frame.Delimiters;
-import org.jboss.netty.handler.codec.serialization.ObjectDecoder;
 import org.jboss.netty.handler.codec.string.StringDecoder;
 import org.jboss.netty.util.CharsetUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import sts.SimpleLogger;
 import sts.SyncMessageDecoder;
 import sts.SyncMessageEncoder;
 import sts.sync.message.StateChange;
 import sts.sync.message.SyncMessage;
 
 public class StsSyncService {
-    protected static Logger log = LoggerFactory.getLogger(StsSyncService.class);
+    protected static SimpleLogger log = SimpleLogger.getLogger(StsSyncService.class);
 	
 	volatile Channel channel = null;
-	Set<SyncMessage> pendingMessages = Collections.synchronizedSet(new LinkedHashSet<SyncMessage>());
-	Set<SyncMessage> inflightMessages = Collections.synchronizedSet(new HashSet<SyncMessage>());
+	Queue<SyncMessage> pendingMessages = new ConcurrentLinkedQueue<SyncMessage>();
+	Set<SyncMessage> inflightMessages = Collections.newSetFromMap(new ConcurrentHashMap<SyncMessage, Boolean>());
 
 	private enum Mode { SERVER, CLIENT };
 	private String host;
@@ -118,9 +116,9 @@ public class StsSyncService {
 	}
 	
 	private void send() {
-		Iterator<SyncMessage> i = pendingMessages.iterator();
-		while (i.hasNext()) {
-			final SyncMessage message = i.next();
+		SyncMessage polledMessage;
+		while ((polledMessage = pendingMessages.poll()) != null) {
+			final SyncMessage message = polledMessage;
 			if(inflightMessages.contains(message)) {
 				continue;
 			}
@@ -190,4 +188,5 @@ public class StsSyncService {
 	public void afterStatusChange(String name, String value) {
 		enqueue(new StateChange(name, value));
 	}
+
 }

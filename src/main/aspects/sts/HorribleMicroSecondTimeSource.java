@@ -1,14 +1,12 @@
 package sts;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** a horribly inaccurate time source.
  *  Will give an accurate to the millisecond time. Microsecond measurements are not accurate, but hopefully consistent on a 
  *  single host (assuming the return values of System.nanoTime() are consistent within a single host
  **/
 public class HorribleMicroSecondTimeSource implements MicrosecondTimeSource {
-	protected static Logger log = LoggerFactory
+	protected static SimpleLogger log = SimpleLogger
 			.getLogger(HorribleMicroSecondTimeSource.class);
 
 	private long startTimeInMillis;

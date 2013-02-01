@@ -254,6 +254,8 @@ public class Controller implements IFloodlightProviderService {
     
     @Override
     public synchronized void setRole(Role role) {
+    	log.info("Setting role to"+ role);
+    	
         if (role == null) throw new NullPointerException("Role can not be null.");
         Role oldRole = this.role;
         this.role = role;

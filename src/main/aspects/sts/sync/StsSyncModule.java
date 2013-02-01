@@ -8,14 +8,12 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import sts.STSLogAspect;
 import sts.STSStateChangeAspect;
+import sts.SimpleLogger;
 
 public class StsSyncModule implements IFloodlightModule {
-    protected static Logger log = LoggerFactory.getLogger(StsSyncModule.class);
+    protected static SimpleLogger log = SimpleLogger.getLogger(StsSyncModule.class);
 	private StsSyncService sync;
 
 	/** IFloodLightModule implementation */
@@ -43,7 +41,8 @@ public class StsSyncModule implements IFloodlightModule {
 		
 		sync = new StsSyncService(spec);
 		
-		STSStateChangeAspect.aspectOf().setSync(sync);		
+		STSStateChangeAspect.aspectOf().setSync(sync);
+		STSLogAspect.aspectOf().setSync(sync);		
 	}
 
 	@Override
