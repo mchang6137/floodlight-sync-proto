@@ -14,7 +14,7 @@ import org.apache.thrift.TEnum;
  * OFMessage type
  * 
  */
-public enum OFMessageType implements org.apache.thrift.TEnum {
+@SuppressWarnings("all") public enum OFMessageType implements org.apache.thrift.TEnum {
   HELLO(0),
   ERROR(1),
   ECHO_REQUEST(2),
@@ -34,7 +34,9 @@ public enum OFMessageType implements org.apache.thrift.TEnum {
   STATS_REQUEST(16),
   STATS_REPLY(17),
   BARRIER_REQUEST(18),
-  BARRIER_REPLY(19);
+  BARRIER_REPLY(19),
+  QUEUE_GET_CONFIG_REQUEST(20),
+  QUEUE_GET_CONFIG_REPLY(21);
 
   private final int value;
 
@@ -95,6 +97,10 @@ public enum OFMessageType implements org.apache.thrift.TEnum {
         return BARRIER_REQUEST;
       case 19:
         return BARRIER_REPLY;
+      case 20:
+        return QUEUE_GET_CONFIG_REQUEST;
+      case 21:
+        return QUEUE_GET_CONFIG_REPLY;
       default:
         return null;
     }

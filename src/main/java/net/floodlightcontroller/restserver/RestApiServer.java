@@ -1,3 +1,19 @@
+/**
+ *    Copyright 2013, Big Switch Networks, Inc.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *    not use this file except in compliance with the License. You may obtain
+ *    a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ *    License for the specific language governing permissions and limitations
+ *    under the License.
+ **/
+
 package net.floodlightcontroller.restserver;
 
 import java.util.ArrayList;
@@ -14,9 +30,13 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Protocol;
 import org.restlet.data.Reference;
+import org.restlet.data.Status;
+import org.restlet.ext.jackson.JacksonRepresentation;
+import org.restlet.representation.Representation;
 import org.restlet.routing.Filter;
 import org.restlet.routing.Router;
 import org.restlet.routing.Template;
+import org.restlet.service.StatusService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +44,6 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
-import net.floodlightcontroller.core.web.JacksonCustomConverter;
 
 public class RestApiServer
     implements IFloodlightModule, IRestApiService {
@@ -73,14 +92,24 @@ public class RestApiServer
         }
         
         public void run(FloodlightModuleContext fmlContext, int restPort) {
+            setStatusService(new StatusService() {
+                @Override
+                public Representation getRepresentation(Status status,
+                                                        Request request,
+                                                        Response response) {
+                    return new JacksonRepresentation<Status>(status);
+                }                
+            });
+            
             // Add everything in the module context to the rest
             for (Class<? extends IFloodlightService> s : fmlContext.getAllServices()) {
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Adding {} for service {} into context",
+                                 s.getCanonicalName(), fmlContext.getServiceImpl(s));
+                }
                 context.getAttributes().put(s.getCanonicalName(), 
                                             fmlContext.getServiceImpl(s));
             }
-            
-            // Use our custom serializers
-            JacksonCustomConverter.replaceConverter();
             
             // Start listening for REST requests
             try {
@@ -101,15 +130,23 @@ public class RestApiServer
     
     @Override
     public void addRestletRoutable(RestletRoutable routable) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Adding REST API routable " 
-                    + routable.getClass().getCanonicalName());
-        }
         restlets.add(routable);
     }
 
     @Override
     public void run() {
+        if (logger.isDebugEnabled()) {
+            StringBuffer sb = new StringBuffer();
+            sb.append("REST API routables: ");
+            for (RestletRoutable routable : restlets) {
+                sb.append(routable.getClass().getSimpleName());
+                sb.append(" (");
+                sb.append(routable.basePath());
+                sb.append("), ");
+            }
+            logger.debug(sb.toString());
+        }
+        
         RestApplication restApp = new RestApplication();
         restApp.run(fmlContext, restPort);
     }
@@ -157,7 +194,7 @@ public class RestApiServer
         if (port != null) {
             restPort = Integer.parseInt(port);
         }
-        logger.info("REST port set to {}", restPort);
+        logger.debug("REST port set to {}", restPort);
     }
 
     @Override

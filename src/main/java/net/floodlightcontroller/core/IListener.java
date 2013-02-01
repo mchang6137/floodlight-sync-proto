@@ -17,8 +17,11 @@
 
 package net.floodlightcontroller.core;
 
-
 public interface IListener<T> {
+    public enum Command {
+        CONTINUE, STOP
+    }
+    
     /**
      * The name assigned to this listener
      * @return

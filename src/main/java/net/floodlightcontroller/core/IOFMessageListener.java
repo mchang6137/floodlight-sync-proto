@@ -26,15 +26,11 @@ import org.openflow.protocol.OFType;
  * @author David Erickson (daviderickson@cs.stanford.edu)
  */
 public interface IOFMessageListener extends IListener<OFType> {
-    public enum Command {
-        CONTINUE, STOP
-    }
-
   /**
    * This is the method Floodlight uses to call listeners with OpenFlow messages
    * @param sw the OpenFlow switch that sent this message
    * @param msg the message
-   * @param cntx a floodlight message context object you can use to pass 
+   * @param cntx a Floodlight message context object you can use to pass 
    * information between listeners
    * @return the command to continue or stop the execution
    */

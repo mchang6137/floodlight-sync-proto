@@ -369,4 +369,8 @@ public class Proact implements IFloodlightModule, IOFMessageListener, IOFSwitchL
 	public void removedSwitch(IOFSwitch sw) {
 	}
 
+	@Override
+	public void switchPortChanged(Long switchId) {
+	}
+
 }

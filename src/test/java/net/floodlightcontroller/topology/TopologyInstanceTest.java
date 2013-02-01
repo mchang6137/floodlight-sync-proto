@@ -1,3 +1,19 @@
+/**
+ *    Copyright 2013, Big Switch Networks, Inc.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *    not use this file except in compliance with the License. You may obtain
+ *    a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ *    License for the specific language governing permissions and limitations
+ *    under the License.
+ **/
+
 package net.floodlightcontroller.topology;
 
 import java.util.ArrayList;
@@ -12,11 +28,13 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.test.MockFloodlightProvider;
 import net.floodlightcontroller.core.test.MockThreadPoolService;
 import net.floodlightcontroller.linkdiscovery.ILinkDiscovery;
+import net.floodlightcontroller.linkdiscovery.ILinkDiscoveryService;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
 import net.floodlightcontroller.topology.NodePortTuple;
 import net.floodlightcontroller.topology.TopologyInstance;
 import net.floodlightcontroller.topology.TopologyManager;
 
+import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -26,6 +44,7 @@ public class TopologyInstanceTest {
     protected static Logger log = LoggerFactory.getLogger(TopologyInstanceTest.class);
     protected TopologyManager topologyManager;
     protected FloodlightModuleContext fmc;
+    protected ILinkDiscoveryService linkDiscovery;
     protected MockFloodlightProvider mockFloodlightProvider;
 
     protected int DIRECT_LINK = 1;
@@ -35,8 +54,10 @@ public class TopologyInstanceTest {
     @Before 
     public void SetUp() throws Exception {
         fmc = new FloodlightModuleContext();
+        linkDiscovery = EasyMock.createMock(ILinkDiscoveryService.class);
         mockFloodlightProvider = new MockFloodlightProvider();
         fmc.addService(IFloodlightProviderService.class, mockFloodlightProvider);
+        fmc.addService(ILinkDiscoveryService.class, linkDiscovery);
         MockThreadPoolService tp = new MockThreadPoolService();
         topologyManager  = new TopologyManager();
         fmc.addService(IThreadPoolService.class, tp);
@@ -46,6 +67,10 @@ public class TopologyInstanceTest {
     }
 
     protected void verifyClusters(int[][] clusters) {
+        verifyClusters(clusters, true);
+    }
+
+    protected void verifyClusters(int[][] clusters, boolean tunnelsEnabled) {
         List<Long> verifiedSwitches = new ArrayList<Long>();
 
         // Make sure the expected cluster arrays are sorted so we can
@@ -53,7 +78,8 @@ public class TopologyInstanceTest {
         for (int i = 0; i < clusters.length; i++)
             Arrays.sort(clusters[i]);
 
-        TopologyInstance ti = topologyManager.getCurrentInstance();
+        TopologyInstance ti = 
+                topologyManager.getCurrentInstance(tunnelsEnabled);
         Set<Long> switches = ti.getSwitches();
 
         for (long sw: switches) {
@@ -68,7 +94,7 @@ public class TopologyInstanceTest {
                     }
                 }
                 if (expectedCluster != null) {
-                    Set<Long> cluster = ti.getSwitchesInCluster(sw);
+                    Set<Long> cluster = ti.getSwitchesInOpenflowDomain(sw);
                     assertEquals(expectedCluster.length, cluster.size());
                     for (long sw2: cluster) {
                         assertTrue(Arrays.binarySearch(expectedCluster, (int)sw2) >= 0);
@@ -79,7 +105,14 @@ public class TopologyInstanceTest {
         }
     }
 
-    protected void verifyExpectedBroadcastPortsInClusters(int [][][] ebp) {
+    protected void 
+    verifyExpectedBroadcastPortsInClusters(int [][][] ebp) {
+        verifyExpectedBroadcastPortsInClusters(ebp, true);
+    }
+
+    protected void 
+    verifyExpectedBroadcastPortsInClusters(int [][][] ebp, 
+                                           boolean tunnelsEnabled) {
         NodePortTuple npt = null;
         Set<NodePortTuple> expected = new HashSet<NodePortTuple>();
         for(int i=0; i<ebp.length; ++i) {
@@ -89,8 +122,9 @@ public class TopologyInstanceTest {
                 npt = new NodePortTuple((long)nptList[j][0], (short)nptList[j][1]);
                 expected.add(npt);
             }
-            TopologyInstance ti = topologyManager.getCurrentInstance();
+            TopologyInstance ti = topologyManager.getCurrentInstance(tunnelsEnabled);
             Set<NodePortTuple> computed = ti.getBroadcastNodePortsInCluster(npt.nodeId);
+            log.info("computed: {}", computed);
             if (computed != null)
                 assertTrue(computed.equals(expected));
             else if (computed == null)
@@ -309,15 +343,15 @@ public class TopologyInstanceTest {
         //      +-------+             +-------+
         {
             int [][] linkArray = {
-                                  {1, 1, 2, 1, TUNNEL_LINK},
-                                  {2, 1, 1, 1, TUNNEL_LINK},
+                                  {1, 1, 2, 1, DIRECT_LINK},
+                                  {2, 1, 1, 1, DIRECT_LINK},
                                   {1, 2, 3, 1, DIRECT_LINK},
                                   {3, 1, 1, 2, DIRECT_LINK},
                                   {2, 2, 3, 2, DIRECT_LINK},
                                   {3, 2, 2, 2, DIRECT_LINK},
 
-                                  {4, 2, 6, 2, TUNNEL_LINK},
-                                  {6, 2, 4, 2, TUNNEL_LINK},
+                                  {4, 2, 6, 2, DIRECT_LINK},
+                                  {6, 2, 4, 2, DIRECT_LINK},
                                   {4, 3, 5, 1, DIRECT_LINK},
                                   {5, 1, 4, 3, DIRECT_LINK},
                                   {5, 2, 6, 1, DIRECT_LINK},
@@ -370,21 +404,67 @@ public class TopologyInstanceTest {
 
         {
             int [][] linkArray = {
-                                  {3, 3, 4, 1, TUNNEL_LINK},
-                                  {4, 1, 3, 3, TUNNEL_LINK},
+                                  {3, 3, 4, 1, DIRECT_LINK},
+                                  {4, 1, 3, 3, DIRECT_LINK},
 
             };
             int [][] expectedClusters = {
                                          {1, 2, 3, 4, 5, 6}
             };
             int [][][] expectedBroadcastPorts = {
-                                                 {{1,1}, {2,1}, {1,2}, {3,1}, {3,3}, {4,1}, {4,3}, {5,1}, {4,2}, {6,2}},
+                                                 {{1,1}, {2,1}, {1,2}, {3,1},
+                                                  {3,3}, {4,1}, {4,3}, {5,1},
+                                                  {4,2}, {6,2}},
             };
 
             createTopologyFromLinks(linkArray);
             topologyManager.createNewInstance();
-            verifyClusters(expectedClusters);
+            verifyClusters(expectedClusters, false);
             verifyExpectedBroadcastPortsInClusters(expectedBroadcastPorts);
+        }
+    }
+
+    @Test
+    public void testLinkRemovalOnBroadcastDomainPorts() throws Exception {
+        {
+            int [][] linkArray = {
+                                  {1, 1, 2, 1, DIRECT_LINK},
+                                  {2, 1, 1, 1, DIRECT_LINK},
+                                  {1, 2, 3, 1, DIRECT_LINK},
+                                  {3, 1, 1, 2, DIRECT_LINK},
+                                  {2, 2, 3, 2, DIRECT_LINK},
+                                  {3, 2, 2, 2, DIRECT_LINK},
+                                  {1, 1, 3, 2, DIRECT_LINK},
+                                  // the last link should make ports
+                                  // (1,1) and (3,2) to be broadcast
+                                  // domain ports, hence all links
+                                  // from these ports must be eliminated.
+            };
+
+            int [][] expectedClusters = {
+                                         {1, 3}, {2},
+            };
+            createTopologyFromLinks(linkArray);
+            topologyManager.createNewInstance();
+            if (topologyManager.getCurrentInstance() instanceof TopologyInstance)
+                verifyClusters(expectedClusters);
+        }
+        {
+            int [][] linkArray = {
+                                  {1, 2, 3, 2, DIRECT_LINK},
+                                  // the last link should make ports
+                                  // (1,1) and (3,2) to be broadcast
+                                  // domain ports, hence all links
+                                  // from these ports must be eliminated.
+            };
+
+            int [][] expectedClusters = {
+                                         {1}, {3}, {2},
+            };
+            createTopologyFromLinks(linkArray);
+            topologyManager.createNewInstance();
+            if (topologyManager.getCurrentInstance() instanceof TopologyInstance)
+                verifyClusters(expectedClusters);
         }
     }
 }

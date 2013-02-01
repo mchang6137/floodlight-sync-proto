@@ -33,7 +33,8 @@ import org.openflow.protocol.factory.BasicFactory;
  *
  * @author David Erickson (daviderickson@cs.stanford.edu)
  */
-public interface IFloodlightProviderService extends IFloodlightService {
+public interface IFloodlightProviderService extends
+        IFloodlightService {
 
     /**
      * A value stored in the floodlight context containing a parsed packet
@@ -76,7 +77,7 @@ public interface IFloodlightProviderService extends IFloodlightService {
     public Map<OFType, List<IOFMessageListener>> getListeners();
 
     /**
-     * Returns a list of all actively connected OpenFlow switches. This doesn't
+     * Returns an unmodifiable map of all actively connected OpenFlow switches. This doesn't
      * contain switches that are connected but the controller's in the slave role.
      * @return the set of actively connected switches
      */
@@ -86,6 +87,13 @@ public interface IFloodlightProviderService extends IFloodlightService {
      * Get the current role of the controller
      */
     public Role getRole();
+    
+    /**
+     * Get the current mapping of controller IDs to their IP addresses
+     * Returns a copy of the current mapping. 
+     * @see IHAListener
+     */
+    public Map<String,String> getControllerNodeIPs();
     
     /**
      * Gets the ID of the controller
@@ -113,13 +121,13 @@ public interface IFloodlightProviderService extends IFloodlightService {
      * Adds a listener for HA role events
      * @param listener The module that wants to listen for events
      */
-    public void addHAListener(IHARoleListener listener);
+    public void addHAListener(IHAListener listener);
     
     /**
      * Removes a listener for HA role events
      * @param listener The module that no longer wants to listen for events
      */
-    public void removeHAListener(IHARoleListener listener);
+    public void removeHAListener(IHAListener listener);
 
     /**
      * Terminate the process
@@ -184,5 +192,27 @@ public interface IFloodlightProviderService extends IFloodlightService {
     * @return
     */
    public Map<String, Object> getControllerInfo(String type);
+   
+   
+   /**
+    * Return the controller start time in  milliseconds
+    * @return
+    */
+   public long getSystemStartTime();
+   
+   /**
+    * Configure controller to always clear the flow table on the switch,
+    * when it connects to controller. This will be true for first time switch
+    * reconnect, as well as a switch re-attaching to Controller after HA
+    * switch over to ACTIVE role
+    */
+   public void setAlwaysClearFlowsOnSwAdd(boolean value);
+   
+   /**
+    * Adds an OFSwitch driver
+    * @param desc The starting portion of switch's manufacturer string
+    * @param driver The object implementing OFSwitchDriver interface
+    */
+   public void addOFSwitchDriver(String desc, IOFSwitchDriver driver);
 
 }

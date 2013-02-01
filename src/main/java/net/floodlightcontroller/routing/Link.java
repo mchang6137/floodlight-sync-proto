@@ -17,13 +17,19 @@
 
 package net.floodlightcontroller.routing;
 
+import net.floodlightcontroller.core.web.serializers.DPIDSerializer;
+import net.floodlightcontroller.core.web.serializers.UShortSerializer;
+
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.openflow.util.HexString;
 
-public class Link {
+public class Link implements Comparable<Link> {
     private long src;
     private short srcPort;
     private long dst;
     private short dstPort;
+
 
     public Link(long srcId, short srcPort, long dstId, short dstPort) {
         this.src = srcId;
@@ -32,17 +38,33 @@ public class Link {
         this.dstPort = dstPort;
     }
 
+    // Convenience method
+    public Link(long srcId, int srcPort, long dstId, int dstPort) {
+        this.src = srcId;
+        this.srcPort = (short) srcPort;
+        this.dst = dstId;
+        this.dstPort = (short) dstPort;
+    }
+
+    @JsonProperty("src-switch")
+    @JsonSerialize(using=DPIDSerializer.class)
     public long getSrc() {
         return src;
     }
 
+    @JsonProperty("src-port")
+    @JsonSerialize(using=UShortSerializer.class)
     public short getSrcPort() {
         return srcPort;
     }
 
+    @JsonProperty("dst-switch")
+    @JsonSerialize(using=DPIDSerializer.class)
     public long getDst() {
         return dst;
     }
+    @JsonProperty("dst-port")
+    @JsonSerialize(using=UShortSerializer.class)
     public short getDstPort() {
         return dstPort;
     }
@@ -83,11 +105,33 @@ public class Link {
     public String toString() {
         return "Link [src=" + HexString.toHexString(this.src) 
                 + " outPort="
-                + srcPort
+                + (srcPort & 0xffff)
                 + ", dst=" + HexString.toHexString(this.dst)
                 + ", inPort="
-                + dstPort
+                + (dstPort & 0xffff)
                 + "]";
+    }
+    
+    public String toKeyString() {
+    	return (HexString.toHexString(this.src) + "|" +
+    			(this.srcPort & 0xffff) + "|" +
+    			HexString.toHexString(this.dst) + "|" +
+    		    (this.dstPort & 0xffff) );
+    }
+
+    @Override
+    public int compareTo(Link a) {
+        // compare link based on natural ordering - src id, src port, dst id, dst port
+        if (this.getSrc() != a.getSrc())
+            return (int) (this.getSrc() - a.getSrc());
+        
+        if (this.getSrcPort() != a.getSrcPort())
+            return (int) (this.getSrc() - a.getSrc());
+        
+        if (this.getDst() != a.getDst())
+            return (int) (this.getDst() - a.getDst());
+        
+        return (int) (this.getDstPort() - a.getDstPort());
     }
 }
 

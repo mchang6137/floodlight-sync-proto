@@ -16,14 +16,14 @@
 
 window.Status = Backbone.Model.extend({    
     defaults: {
-    	host: 'localhost',
-    	ofport: 6633,
-    	uptime: 'unknown',
-    	free: 0,
-    	total: 0,
-    	healthy: 'unknown',
-    	modules: [],
-    	moduleText: ''
+        host: 'localhost',
+        ofport: 6633,
+        uptime: 'unknown',
+        free: 0,
+        total: 0,
+        healthy: 'unknown',
+        modules: [],
+        moduleText: ''
     },
     
     initialize:function () {
@@ -35,6 +35,15 @@ window.Status = Backbone.Model.extend({
             success:function (data) {
                 console.log("fetched controller status: health");
                 self.set(data);
+                // console.log(self.toJSON());
+            }
+        });
+        $.ajax({
+            url:hackBase + "/wm/core/system/uptime/json",
+            dataType:"json",
+            success:function (data) {
+                console.log("fetched controller status: uptime");
+                self.set({uptime:(Math.round(data.systemUptimeMsec / 1000) + ' s')});
                 // console.log(self.toJSON());
             }
         });
@@ -54,7 +63,8 @@ window.Status = Backbone.Model.extend({
                 console.log("fetched controller status: modules loaded");
                 // console.log(data);
                 self.set({modules:_.keys(data)});
-                self.set({moduleText:_.reduce(_.keys(data), function(s, m){return s+m.replace("net.floodlightcontroller", "n.f")+", "}, '')});
+                self.set({moduleText:_.reduce(_.keys(data), function(s, m)
+                    {return s+m.replace("net.floodlightcontroller", "n.f")+", "}, '')});
             }
         });
 

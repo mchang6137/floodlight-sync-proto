@@ -17,6 +17,8 @@
 
 package org.openflow.util;
 
+import java.math.BigInteger;
+
 public class HexString {
     /**
      * Convert a string of bytes to a ':' separated hex string
@@ -24,6 +26,7 @@ public class HexString {
      * @return "0f:ca:fe:de:ad:be:ef"
      */
     public static String toHexString(byte[] bytes) {
+        if (bytes == null) return "";
         int i;
         String ret = "";
         String tmp;
@@ -38,12 +41,12 @@ public class HexString {
         return ret;
     }
     
-    public static String toHexString(long val) {
+    public static String toHexString(long val, int padTo) {
         char arr[] = Long.toHexString(val).toCharArray();
         String ret = "";
         // prepend the right number of leading zeros
         int i = 0;
-        for (; i < (16 - arr.length); i++) {
+        for (; i < (padTo * 2 - arr.length); i++) {
             ret += "0";
             if ((i % 2) == 1)
                 ret += ":";
@@ -53,7 +56,11 @@ public class HexString {
             if ((((i + j) % 2) == 1) && (j < (arr.length - 1)))
                 ret += ":";
         }
-        return ret;
+        return ret;        
+    }
+   
+    public static String toHexString(long val) {
+        return toHexString(val, 8);
     }
     
     
@@ -76,7 +83,11 @@ public class HexString {
     }
     
     public static long toLong(String values) throws NumberFormatException {
-        return Long.parseLong(values.replaceAll(":", ""),16);
+        // Long.parseLong() can't handle HexStrings with MSB set. Sigh. 
+        BigInteger bi = new BigInteger(values.replaceAll(":", ""),16);
+        if (bi.bitLength() > 64) 
+            throw new NumberFormatException("Input string too big to fit in long: " + values);
+        return bi.longValue();
     }
 
 }

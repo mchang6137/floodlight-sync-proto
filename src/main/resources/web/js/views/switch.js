@@ -42,7 +42,7 @@ window.SwitchListItemView = Backbone.View.extend({
     initialize:function () {
         this.template = _.template(tpl.get('switch-list-item'));
         this.model.bind("change", this.render, this);
-        //this.model.bind("destroy", this.close, this);
+    //this.model.bind("destroy", this.close, this);
     },
 
     render:function (eventName) {
@@ -53,17 +53,18 @@ window.SwitchListItemView = Backbone.View.extend({
 });
 
 window.SwitchListView = Backbone.View.extend({
-	
+
     initialize:function () {
         this.template = _.template(tpl.get('switch-list'));
         this.model.bind("change", this.render, this);
+        this.model.bind("remove", this.render, this);
     },
 
     render:function (eventName) {
         $(this.el).html(this.template({nswitches:swl.length}));
         _.each(this.model.models, function (sw) {
             $(this.el).find('table.switch-table > tbody')
-            	.append(new SwitchListItemView({model:sw}).render().el);
+                .append(new SwitchListItemView({model:sw}).render().el);
         }, this);
         return this;
     },

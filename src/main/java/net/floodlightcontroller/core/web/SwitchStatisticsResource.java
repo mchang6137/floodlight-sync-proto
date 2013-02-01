@@ -18,16 +18,9 @@
 package net.floodlightcontroller.core.web;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import net.floodlightcontroller.core.IFloodlightProviderService;
-import net.floodlightcontroller.core.IOFSwitch;
-
-import org.openflow.protocol.OFFeaturesReply;
-import org.openflow.protocol.statistics.OFStatistics;
 import org.openflow.protocol.statistics.OFStatisticsType;
-import org.openflow.util.HexString;
 import org.restlet.resource.Get;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,12 +35,8 @@ public class SwitchStatisticsResource extends SwitchResourceBase {
 
     @Get("json")
     public Map<String, Object> retrieve() {
-        IFloodlightProviderService floodlightProvider = 
-                (IFloodlightProviderService)getContext().getAttributes().
-                    get(IFloodlightProviderService.class.getCanonicalName());
-        
         HashMap<String,Object> result = new HashMap<String,Object>();
-        List<OFStatistics> values = null;
+        Object values = null;
         
         String switchId = (String) getRequestAttributes().get("switchId");
         String statType = (String) getRequestAttributes().get("statType");
@@ -65,16 +54,9 @@ public class SwitchStatisticsResource extends SwitchResourceBase {
         } else if (statType.equals("table")) {
             values = getSwitchStatistics(switchId, OFStatisticsType.TABLE);
         } else if (statType.equals("features")) {
-            IOFSwitch sw = floodlightProvider.getSwitches().get(HexString.toLong(switchId));
-            if (sw != null) {
-                OFFeaturesReply fr = sw.getFeaturesReply();
-                result.put(sw.getStringId(), fr);
-            }
-            return result;
-        } else if (statType.equals("host")) {
-            result.put(switchId, getSwitchTableJson(HexString.toLong(switchId)));
-            return result;
+            values = getSwitchFeaturesReply(switchId);
         }
+
         result.put(switchId, values);
         return result;
     }

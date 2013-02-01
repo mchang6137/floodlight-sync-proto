@@ -1,3 +1,19 @@
+/**
+ *    Copyright 2013, Big Switch Networks, Inc.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *    not use this file except in compliance with the License. You may obtain
+ *    a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ *    License for the specific language governing permissions and limitations
+ *    under the License.
+ **/
+
 package net.floodlightcontroller.jython;
 
 import java.util.Collection;
@@ -14,7 +30,8 @@ import net.floodlightcontroller.core.module.IFloodlightService;
 
 public class JythonDebugInterface implements IFloodlightModule {
     protected static Logger log = LoggerFactory.getLogger(JythonDebugInterface.class);
-    JythonServer debug_server;
+    protected JythonServer debug_server;
+    protected static int JYTHON_PORT = 6655;
     
     @Override
     public Collection<Class<? extends IFloodlightService>> getModuleServices() {
@@ -44,8 +61,7 @@ public class JythonDebugInterface implements IFloodlightModule {
 
     @Override
     public void startUp(FloodlightModuleContext context) {
-        Map<String, Object> locals = new HashMap<String, Object>();
-        
+        Map<String, Object> locals = new HashMap<String, Object>();     
         // add all existing module references to the debug server
         for (Class<? extends IFloodlightService> s : context.getAllServices()) {
             // Put only the last part of the name
@@ -54,7 +70,15 @@ public class JythonDebugInterface implements IFloodlightModule {
             locals.put(name, context.getServiceImpl(s));
         }
         
-        JythonServer debug_server = new JythonServer(6655, locals);
+        // read our config options
+        Map<String, String> configOptions = context.getConfigParams(this);
+        int port = JYTHON_PORT;
+        String portNum = configOptions.get("port");
+        if (portNum != null) {
+            port = Integer.parseInt(portNum);
+        }
+        
+        JythonServer debug_server = new JythonServer(port, locals);
         debug_server.start();
     }
 }

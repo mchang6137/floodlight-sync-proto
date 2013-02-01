@@ -1,3 +1,19 @@
+/**
+ *    Copyright 2013, Big Switch Networks, Inc.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *    not use this file except in compliance with the License. You may obtain
+ *    a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ *    License for the specific language governing permissions and limitations
+ *    under the License.
+ **/
+
 package net.floodlightcontroller.staticflowentry;
 
 import java.util.Map;
@@ -11,7 +27,7 @@ public interface IStaticFlowEntryPusherService extends IFloodlightService {
      * Adds a static flow.
      * @param name Name of the flow mod. Must be unique.
      * @param fm The flow to push.
-     * @param swDpid The switch DPID to push it to.
+     * @param swDpid The switch DPID to push it to, in 00:00:00:00:00:00:00:01 notation.
      */
     public void addFlow(String name, OFFlowMod fm, String swDpid);
     
