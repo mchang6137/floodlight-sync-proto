@@ -1,4 +1,10 @@
+NOTE: This is an experimental research fork of an old version fo the projectfloodlight OpenFlow controller to work with the sync protocol of the STS project.
+
+This experimental research code that is hasn't been thoroughly tested and should not be used as the basis for any serious work. You're welcome to use the code to reproduce or continue scientific experiments.
   
+  
+-------
+
   Floodlight
   An Apache licensed, Java based OpenFlow controller
 
