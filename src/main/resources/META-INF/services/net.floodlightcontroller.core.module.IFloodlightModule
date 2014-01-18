@@ -20,9 +20,6 @@ net.floodlightcontroller.counter.CounterStore
 net.floodlightcontroller.counter.NullCounterStore
 net.floodlightcontroller.threadpool.ThreadPool
 net.floodlightcontroller.ui.web.StaticWebRoutable
-<<<<<<< HEAD
-sts.sync.StsSyncModule
-=======
 net.floodlightcontroller.virtualnetwork.VirtualNetworkFilter
 net.floodlightcontroller.devicemanager.internal.DefaultEntityClassifier
 net.floodlightcontroller.devicemanager.test.MockDeviceManager
@@ -30,4 +27,4 @@ net.floodlightcontroller.core.test.MockFloodlightProvider
 net.floodlightcontroller.core.test.MockThreadPoolService
 net.floodlightcontroller.firewall.Firewall
 net.floodlightcontroller.loadbalancer.LoadBalancer
->>>>>>> f37046ae7e3347fe60c13b3a0ef7fb0053b045ce
+sts.sync.StsSyncModule

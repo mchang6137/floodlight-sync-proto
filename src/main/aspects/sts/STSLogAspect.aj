@@ -26,7 +26,7 @@ public aspect STSLogAspect {
 				  );
 
 	after(Logger logger, String msg): logInfo(logger, msg) {
-		log.debug("Log Aspect: "+msg);
+		//log.debug("Log Aspect: "+msg);
 		if(sync != null)
 			sync.afterStatusChange("log", "{'logger'"+logger.getName() + ", 'msg': "+msg+ "}");
 	}		
