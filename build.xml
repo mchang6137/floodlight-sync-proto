@@ -151,7 +151,7 @@
     <target name="aspects" depends="compile">
         <taskdef resource="org/aspectj/tools/ant/taskdefs/aspectjTaskdefs.properties">
             <classpath>
-                <pathelement location="${aspectj.home}/lib/aspectjtools.jar"/>
+                <pathelement location="./lib/aspectjtools.jar"/>
             </classpath>
         </taskdef>
         <iajc destDir="${aop.build}" Xlintwarnings ="true" showWeaveInfo="true" 
@@ -161,7 +161,7 @@
                 <pathelement location="${build}"/>
             </inpath>
             <classpath>
-                <pathelement location="${aspectj.home}/lib/aspectjrt.jar"/>
+                <pathelement location="./lib/aspectjrt-1.8.7.jar"/>
                 <path refid="aspectclasspath"/>
             </classpath>
         </iajc>
@@ -285,7 +285,7 @@
             <zipgroupfileset dir="${target}/lib">
                 <patternset refid="genlib"/>
             </zipgroupfileset>
-            <zipfileset src="${aspectj.home}/lib/aspectjrt.jar"/>
+            <zipfileset src="./lib/aspectjrt-1.8.7.jar"/>
         </jar>
         <jar destfile="${floodlight-test-jar}" filesetmanifest="mergewithoutmain">
             <manifest>
